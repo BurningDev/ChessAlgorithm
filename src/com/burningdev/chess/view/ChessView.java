@@ -12,10 +12,12 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
 import com.burningdev.chess.core.ChessAlgorithm;
+import com.burningdev.chess.core.Fraction;
 
 public class ChessView {
 
@@ -51,6 +53,10 @@ public class ChessView {
 		squaresPanel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
+				if(chessAlgorithm.getWinner() != null) {
+					return;
+				}
+				
 				if(SwingUtilities.isRightMouseButton(e)) {
 					mode = 0;
 					return;
@@ -61,17 +67,30 @@ public class ChessView {
 					mode = 2;
 				} else if(mode == 2) {
 					finishPosition = calcPosition(e.getY(), e.getX());
+					
+					if(finishPosition[0] == firstPosition[0] && finishPosition[1] == firstPosition[1]) {
+						mode = 0;
+						JOptionPane.showMessageDialog(null, "You must not select the same field.", "Warn", JOptionPane.WARNING_MESSAGE);
+						return;
+					}
+					
 					mode = 1;
 					
 					chessAlgorithm.playerMove(firstPosition[0], firstPosition[1], finishPosition[0], finishPosition[1]);
-					squaresPanel.setSquares(chessAlgorithm.getSquares());
+					squaresPanel.setPieces(chessAlgorithm.getPieces());
 					squaresPanel.repaint();
+					
+					if(chessAlgorithm.getWinner() == Fraction.PLAYER) {
+						JOptionPane.showMessageDialog(null, "You have defeated your opponent!\n\nGo to File -> Reset", "Victory", JOptionPane.INFORMATION_MESSAGE);
+					} else if(chessAlgorithm.getWinner() == Fraction.COMPUTER) {
+						JOptionPane.showMessageDialog(null, "The opponent has defeated you!\n\nGo to File -> Reset", "Defeat", JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			}
 		});
 		frame.getContentPane().add(squaresPanel);
 		
-		squaresPanel.setSquares(this.chessAlgorithm.getSquares());
+		squaresPanel.setPieces(this.chessAlgorithm.getPieces());
 		
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
@@ -139,7 +158,7 @@ public class ChessView {
 	
 	private void reset() {
 		chessAlgorithm.reset();
-		squaresPanel.setSquares(chessAlgorithm.getSquares());
+		squaresPanel.setPieces(chessAlgorithm.getPieces());
 		squaresPanel.repaint();
 	}
 }

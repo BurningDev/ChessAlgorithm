@@ -18,6 +18,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 
+import org.pmw.tinylog.Logger;
+
 public class AboutDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -30,7 +32,7 @@ public class AboutDialog extends JDialog {
 			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			dialog.setVisible(true);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.error(e, e.getMessage());
 		}
 	}
 

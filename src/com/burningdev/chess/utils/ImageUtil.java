@@ -9,11 +9,17 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.pmw.tinylog.Logger;
+
 import com.burningdev.chess.core.Figure;
 import com.burningdev.chess.core.Fraction;
 
 public class ImageUtil {
-	public static BufferedImage getImageByFigur(Figure figur, Fraction fraction) {
+	private ImageUtil() {
+
+	}
+	
+	public static BufferedImage getImageByFigure(Figure figur, Fraction fraction) {
 		StringBuilder url = new StringBuilder();
 		url.append("img\\");
 
@@ -52,7 +58,7 @@ public class ImageUtil {
 		try {
 			image = ImageIO.read(new File(url.toString()));
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.error(e, e.getMessage());
 		}
 
 		return image;

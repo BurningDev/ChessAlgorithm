@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import com.burningdev.chess.pieces.ChessPiece;
+import com.burningdev.chess.pieces.Position;
+
 public class ChessAlgorithm {
 	private Chess chess;
 	
@@ -23,42 +26,68 @@ public class ChessAlgorithm {
 		
 		this.chess.move(beforeY, beforeX, nowY, nowX);
 		
+		if(!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.COMPUTER)) {
+			this.chess.setWinner(Fraction.PLAYER);
+			return;
+		}
+		
 		computerMove();
+		
+		if(!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.PLAYER)) {
+			this.chess.setWinner(Fraction.COMPUTER);
+			return;
+		}
 	}
 
 	private void computerMove() {
-		List<int[]> computerPositions = this.chess.getAllComputerPositions();
-		List<Movement> movements = new ArrayList<Movement>();
+		List<Position> computerPositions = this.chess.getAllComputerPositions();
+		List<Movement> movements = new ArrayList<>();
 		
-		for(int[] computerPosition : computerPositions) {
+		Node.nodes = 0;
+		
+		for(Position computerPosition : computerPositions) {
 			
-			List<int[]> attackablePositions = this.chess.getAttackablePositions(computerPosition[0], computerPosition[1]);
+			List<Position> attackablePositions = this.chess.getAttackablePositions(computerPosition.getY(), computerPosition.getX());
 			
-			for(int[] attackablePosition : attackablePositions) {
-				Chess newChess = new Chess();
-				newChess.setSquares(cloneArray(this.chess.getSquares()));
-				newChess.move(computerPosition[0], computerPosition[1], attackablePosition[0], attackablePosition[1]);
+			for(Position attackablePosition : attackablePositions) {
+				// A copy of chess is created
+				Chess newChess = this.chess.clone();
 				
-				Node parentNode = new Node(null, newChess, 2, Fraction.COMPUTER);
-				parentNode.calcScore(false);
-				parentNode.expandTreePlayer();
+				newChess.move(computerPosition.getY(), computerPosition.getX(), attackablePosition.getY(), attackablePosition.getX());
 				
-				System.out.println(parentNode.getScore());
+				Node parentNode = new Node(null, newChess, 2, Fraction.PLAYER, true);
+				parentNode.setParentNode(parentNode);
+				parentNode.play();
 				
-				movements.add(new Movement(new int[] {computerPosition[0], computerPosition[1]}, new int[] {attackablePosition[0], attackablePosition[1]}, parentNode.getScore()));
+				int highestScore = -8;
+				int lowestScore = 8;
+				for(Node node : parentNode.getChildren()) {
+					if(node.getHighestScore() > highestScore) {
+						highestScore = node.getHighestScore();
+					}
+					
+					if(node.getLowestScore() < lowestScore) {
+						lowestScore = node.getLowestScore();
+					}
+				}
+				
+				int score = 0;
+				for(Node node : parentNode.getChildren()) {
+					score += node.getScore();
+				}
+				
+				movements.add(new Movement(computerPosition, attackablePosition, score));
 			}
 		}
 		
-		System.out.println();
-		
 		Collections.sort(movements, new Comparator<Movement>() {
 			@Override
-			public int compare(Movement b1, Movement b2) {
-				if (b1.getScore() < b2.getScore()) {
+			public int compare(Movement m1, Movement m2) {
+				if (m1.getScore() < m2.getScore()) {
 					return -1;
 				}
 
-				if (b1.getScore() > b2.getScore()) {
+				if (m1.getScore() > m2.getScore()) {
 					return 1;
 				}
 
@@ -67,23 +96,18 @@ public class ChessAlgorithm {
 		});
 		
 		Movement nextMove = movements.get(movements.size() - 1);
-		this.chess.move(nextMove.getFrom()[0], nextMove.getFrom()[1], nextMove.getTo()[0], nextMove.getTo()[1]);
+		this.chess.move(nextMove.getFrom().getY(), nextMove.getFrom().getX(), nextMove.getTo().getY(), nextMove.getTo().getX());
 	}
 	
-	public ChessSquare[][] getSquares() {
-		return this.chess.getSquares();
+	public List<ChessPiece> getPieces() {
+		return this.chess.getAllPieces(null);
 	}
 	
 	public void reset() {
 		this.chess.reset();
 	}
 	
-	public static ChessSquare[][] cloneArray(ChessSquare[][] src) {
-	    int length = src.length;
-	    ChessSquare[][] target = new ChessSquare[length][src[0].length];
-	    for (int i = 0; i < length; i++) {
-	        System.arraycopy(src[i], 0, target[i], 0, src[i].length);
-	    }
-	    return target;
+	public Fraction getWinner() {
+		return this.chess.getWinner();
 	}
 }

@@ -6,8 +6,15 @@ package com.burningdev.chess.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.burningdev.chess.pieces.ChessPiece;
+import com.burningdev.chess.pieces.King;
+import com.burningdev.chess.pieces.Knight;
+import com.burningdev.chess.pieces.Pawn;
+import com.burningdev.chess.pieces.Position;
+import com.burningdev.chess.pieces.Rook;
+
 public class Chess {
-	private ChessSquare[][] squares;
+	private List<ChessPiece> pieces;
 
 	private Fraction winner;
 
@@ -15,16 +22,33 @@ public class Chess {
 		reset();
 	}
 
-	public List<int[]> getAllPositions(Fraction fraction) {
-		List<int[]> result = new ArrayList<int[]>();
+	public List<Position> getAllPositions(Fraction fraction) {
+		List<Position> result = new ArrayList<>();
 
-		for (int y = 0; y < 8; y++) {
-			for (int x = 0; x < 8; x++) {
-				ChessSquare squares = this.squares[y][x];
-				if (squares != null) {
-					if (squares.getFraction() == fraction) {
-						result.add(new int[] { y, x });
-					}
+		for (ChessPiece piece : getAllPieces(fraction)) {
+			if(!piece.isAlive()) {
+				continue;
+			}
+			
+			result.add(piece.getPosition());
+		}
+
+		return result;
+	}
+
+	public List<ChessPiece> getAllPieces(Fraction fraction) {
+		List<ChessPiece> result = new ArrayList<>();
+
+		for (ChessPiece piece : this.pieces) {
+			if(!piece.isAlive()) {
+				continue;
+			}
+			
+			if (fraction == null) {
+				result.add(piece);
+			} else {
+				if (piece.getFraction() == fraction) {
+					result.add(piece);
 				}
 			}
 		}
@@ -32,276 +56,130 @@ public class Chess {
 		return result;
 	}
 
-	private List<Figure> getAllFiguren(Fraction fraction) {
-		List<Figure> result = new ArrayList<Figure>();
-
-		for (int y = 0; y < 8; y++) {
-			for (int x = 0; x < 8; x++) {
-				ChessSquare squares = this.squares[y][x];
-				if (squares != null) {
-					if (squares.getFraction() == fraction) {
-						result.add(this.squares[y][x].getFigure());
-					}
-				}
-			}
-		}
-
-		return result;
-	}
-
-	public List<int[]> getAllComputerPositions() {
+	public List<Position> getAllComputerPositions() {
 		return getAllPositions(Fraction.COMPUTER);
 	}
 
-	public List<int[]> getAllPlayerPositions() {
+	public List<Position> getAllPlayerPositions() {
 		return getAllPositions(Fraction.PLAYER);
 	}
 
-	public List<int[]> getAttackablePositions(int y, int x) {
-		ChessSquare squares = this.squares[y][x];
+	public List<Position> getAttackablePositions(int y, int x) {
+		List<Position> reachablePositions = new ArrayList<>();
+		ChessPiece piece = getChessPieceOnPosition(x, y);
 
-		List<int[]> result = new ArrayList<int[]>();
-
-		if (this.squares[y][x] == null) {
-			return null;
+		if (piece == null) {
+			return reachablePositions;
 		}
 
-		switch (squares.getFigure()) {
-		case PAWN:
-			int tempX;
-			int tempY;
+		reachablePositions = piece.getReachableFields(piece.getFraction(), this);
 
-			if (squares.getFraction() == Fraction.COMPUTER) {
-				tempY = y - 1;
-				tempX = x + 1;
-				if (isPositionValid(tempY, tempX)) {
-					if (this.squares[tempY][tempX] != null) {
-						if (this.squares[tempY][tempX].getFraction() != Fraction.COMPUTER) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-				tempY = y - 1;
-				tempX = x - 1;
-				if (isPositionValid(tempY, tempX)) {
-					if (this.squares[tempY][tempX] != null) {
-						if (this.squares[tempY][tempX].getFraction() != Fraction.COMPUTER) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-
-				tempY = y - 1;
-				tempX = x;
-				if (squares.getFraction() == Fraction.COMPUTER) {
-					if (isPositionValid(tempY, tempX)) {
-						if (this.squares[tempY][tempX] == null) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-			} else {
-				tempY = y + 1;
-				tempX = x + 1;
-				if (isPositionValid(tempY, tempX)) {
-					if (this.squares[tempY][tempX] != null) {
-						if (this.squares[tempY][tempX].getFraction() != Fraction.PLAYER) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-				tempY = y + 1;
-				tempX = x - 1;
-				if (isPositionValid(tempY, tempX)) {
-					if (this.squares[tempY][tempX] != null) {
-						if (this.squares[tempY][tempX].getFraction() != Fraction.PLAYER) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-
-				tempY = y + 1;
-				tempX = x;
-				if (squares.getFraction() == Fraction.PLAYER) {
-					if (isPositionValid(tempY, tempX)) {
-						if (this.squares[tempY][tempX] == null) {
-							result.add(new int[] { tempY, tempX });
-						}
-					}
-				}
-			}
-			break;
-		case KING:
-			List<int[]> kingMovements = new ArrayList<int[]>();
-
-			kingMovements.add(new int[] { y, x + 1 });
-			kingMovements.add(new int[] { y, x - 1 });
-			kingMovements.add(new int[] { y + 1, x });
-			kingMovements.add(new int[] { y - 1, x });
-			kingMovements.add(new int[] { y + 1, x + 1 });
-			kingMovements.add(new int[] { y + 1, x - 1 });
-			kingMovements.add(new int[] { y - 1, x + 1 });
-			kingMovements.add(new int[] { y - 1, x - 1 });
-
-			if (squares.getFraction() == Fraction.COMPUTER) {
-				for (int[] kingMovement : kingMovements) {
-					if (isPositionValid(kingMovement[0], kingMovement[1])) {
-						if (this.squares[kingMovement[0]][kingMovement[1]] != null) {
-							if (this.squares[kingMovement[0]][kingMovement[1]]
-									.getFraction() != Fraction.COMPUTER) {
-								result.add(new int[] { kingMovement[0], kingMovement[1] });
-							}
-						} else {
-							result.add(new int[] { kingMovement[0], kingMovement[1] });
-						}
-					}
-				}
-			} else {
-				for (int[] kingMovement : kingMovements) {
-					if (isPositionValid(kingMovement[0], kingMovement[1])) {
-						if (this.squares[kingMovement[0]][kingMovement[1]] != null) {
-							if (this.squares[kingMovement[0]][kingMovement[1]]
-									.getFraction() != Fraction.PLAYER) {
-								result.add(new int[] { kingMovement[0], kingMovement[1] });
-							}
-						} else {
-							result.add(new int[] { kingMovement[0], kingMovement[1] });
-						}
-					}
-				}
-			}
-			break;
-		case KNIGHT:
-			List<int[]> knightMovements = new ArrayList<int[]>();
-
-			knightMovements.add(new int[] { y + 2, x + 1 });
-			knightMovements.add(new int[] { y + 2, x - 1 });
-			knightMovements.add(new int[] { y - 2, x + 1 });
-			knightMovements.add(new int[] { y - 2, x - 1 });
-			knightMovements.add(new int[] { y + 1, x + 2 });
-			knightMovements.add(new int[] { y - 1, x - 2 });
-			knightMovements.add(new int[] { y + 1, x - 2 });
-			knightMovements.add(new int[] { y - 1, x + 2 });
-
-			for (int[] knightMovement : knightMovements) {
-				if (isPositionValid(knightMovement[0], knightMovement[1])) {
-					if (this.squares[knightMovement[0]][knightMovement[1]] != null) {
-						if (this.squares[knightMovement[0]][knightMovement[1]].getFraction() != Fraction.COMPUTER) {
-							result.add(new int[] { knightMovement[0], knightMovement[1] });
-						}
-					} else {
-						result.add(new int[] { knightMovement[0], knightMovement[1] });
-					}
-				}
-			}
-			break;
-		default:
-
-		}
-
-		return result;
-
+		return reachablePositions;
 	}
 
 	public boolean isPositionValid(int y, int x) {
-		if ((y >= 0 && y <= 7) && (x >= 0 && x <= 7)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	public ChessSquare[][] getSquares() {
-		return this.squares;
-	}
-
-	public void setSquares(ChessSquare[][] squares) {
-		this.squares = squares;
+		return ((y >= 0 && y <= 7) && (x >= 0 && x <= 7));
 	}
 
 	public void reset() {
-		this.squares = new ChessSquare[8][8];
 		this.winner = null;
 
-		for (int y = 0; y < 8; y++) {
-			for (int x = 0; x < 8; x++) {
-				this.squares[y][x] = null;
-			}
-		}
+		this.pieces = new ArrayList<>();
+		
+		this.pieces.add(new Knight(new Position(1, 7), Fraction.COMPUTER));
+		this.pieces.add(new Knight(new Position(6, 7), Fraction.COMPUTER));
+		this.pieces.add(new Knight(new Position(1, 0), Fraction.PLAYER));
+		this.pieces.add(new Knight(new Position(6, 0), Fraction.PLAYER));
 
-		this.squares[7][1] = new ChessSquare(Figure.KNIGHT, Fraction.COMPUTER);
-		this.squares[7][6] = new ChessSquare(Figure.KNIGHT, Fraction.COMPUTER);
-		this.squares[0][1] = new ChessSquare(Figure.KNIGHT, Fraction.PLAYER);
-		this.squares[0][6] = new ChessSquare(Figure.KNIGHT, Fraction.PLAYER);
-
-		this.squares[7][4] = new ChessSquare(Figure.KING, Fraction.COMPUTER);
-		this.squares[0][4] = new ChessSquare(Figure.KING, Fraction.PLAYER);
-
-		for (int x = 0; x < 8; x++) {
-			this.squares[6][x] = new ChessSquare(Figure.PAWN, Fraction.COMPUTER);
-		}
+		this.pieces.add(new Rook(new Position(0, 7), Fraction.COMPUTER));
+		this.pieces.add(new Rook(new Position(7, 7), Fraction.COMPUTER));
+		this.pieces.add(new Rook(new Position(0, 0), Fraction.PLAYER));
+		this.pieces.add(new Rook(new Position(7, 0), Fraction.PLAYER));
+		
+		this.pieces.add(new King(new Position(3, 7), Fraction.COMPUTER));
+		this.pieces.add(new King(new Position(4, 0), Fraction.PLAYER));
 
 		for (int x = 0; x < 8; x++) {
-			this.squares[1][x] = new ChessSquare(Figure.PAWN, Fraction.PLAYER);
+			this.pieces.add(new Pawn(new Position(x, 6), Fraction.COMPUTER));
+			this.pieces.add(new Pawn(new Position(x, 1), Fraction.PLAYER));
 		}
 	}
 
 	public Fraction getWinner() {
 		return this.winner;
 	}
+	
+	public void setWinner(Fraction winner) {
+		this.winner = winner;
+	}
 
 	public int getScore(Fraction fraction) {
 		int score = 0;
 
-		List<Figure> figures = getAllFiguren(fraction);
-		List<Figure> figuresEnemies = getAllFiguren(getOtherFraction(fraction));
+		List<ChessPiece> pieces = getAllPieces(fraction);
+		List<ChessPiece> piecesEnemies = getAllPieces(getOtherFraction(fraction));
 
-		if (!figures.contains(Figure.KING)) {
-			return -5;
+		boolean kingAlive = false;
+		for (ChessPiece piece : pieces) {
+			if (piece.getFigure() == Figure.KING && piece.isAlive() && piece.getFraction() == fraction) {
+				kingAlive = true;
+			}
 		}
 
-		for (Figure figure : figures) {
-			switch (figure) {
+		if (!kingAlive) {			
+			return -50;
+		}
+
+		for (ChessPiece piece : pieces) {
+			if(!piece.isAlive()) {
+				continue;
+			}
+			
+			switch (piece.getFigure()) {
 			case PAWN:
-				score += 1;
+				score += 2;
 				break;
 			case KNIGHT:
-				score += 2;
-				break;
-			case BISHOP:
-				score += 2;
-				break;
-			case ROOK:
-				score += 2;
-				break;
-			case QUEEN:
 				score += 4;
 				break;
-			case KING:
+			case BISHOP:
+				score += 4;
+				break;
+			case ROOK:
+				score += 4;
+				break;
+			case QUEEN:
 				score += 8;
+				break;
+			case KING:
+				score += 16;
 				break;
 			}
 		}
 
-		for (Figure figureEnemy : figuresEnemies) {
-			switch (figureEnemy) {
+		for (ChessPiece pieceEnemy : piecesEnemies) {
+			if(!pieceEnemy.isAlive()) {
+				continue;
+			}
+			
+			switch (pieceEnemy.getFigure()) {
 			case PAWN:
-				score -= 1;
+				score -= 2;
 				break;
 			case KNIGHT:
-				score -= 2;
-				break;
-			case BISHOP:
-				score -= 2;
-				break;
-			case ROOK:
-				score -= 2;
-				break;
-			case QUEEN:
 				score -= 4;
 				break;
-			case KING:
+			case BISHOP:
+				score -= 4;
+				break;
+			case ROOK:
+				score -= 4;
+				break;
+			case QUEEN:
 				score -= 8;
+				break;
+			case KING:
+				score -= 16;
 				break;
 			}
 		}
@@ -318,8 +196,76 @@ public class Chess {
 	}
 
 	public void move(int yBefore, int xBefore, int yNow, int xNow) {
-		ChessSquare squares = this.squares[yBefore][xBefore];
-		this.squares[yNow][xNow] = squares;
-		this.squares[yBefore][xBefore] = null;
+		ChessPiece pieceNow = getChessPieceOnPosition(xNow, yNow);
+		if(pieceNow != null && pieceNow.isAlive()) {
+			pieceNow.kill();
+		}
+		
+		ChessPiece piece = getChessPieceOnPosition(xBefore, yBefore);
+		if (piece != null) {
+			piece.setPosition(new Position(xNow, yNow));
+		}
+	}
+
+	public ChessPiece getChessPieceOnPosition(int x, int y) {
+		for (ChessPiece piece : this.pieces) {
+			if (piece.getPosition().getX() == x && piece.getPosition().getY() == y && piece.isAlive()) {
+				return piece;
+			}
+		}
+
+		return null;
+	}
+	
+	public void addChessPiece(ChessPiece piece) {
+		this.pieces.add(piece);
+	}
+	
+	public boolean pieceExistsAndAlive(int x, int y) {
+		ChessPiece piece = getChessPieceOnPosition(x, y);
+		
+		if(piece == null) {
+			return false;
+		}
+		
+		if(piece.isAlive()) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean pieceExistsAndAlive(Figure figure, Fraction fraction) {
+		for(ChessPiece piece : this.pieces) {
+			if(piece.getFigure() == figure && piece.isAlive() && piece.getFraction() == fraction) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public Chess clone() {
+		Chess newChess = new Chess();
+		newChess.pieces.clear();
+		for(ChessPiece piece : this.getAllPieces(null)) {
+			if(piece instanceof Pawn) {
+				newChess.addChessPiece(new Pawn(piece.getPosition(), piece.getFraction(), piece.isAlive()));
+			}
+			
+			if(piece instanceof Knight) {
+				newChess.addChessPiece(new Knight(piece.getPosition(), piece.getFraction(), piece.isAlive()));
+			}
+			
+			if(piece instanceof Rook) {
+				newChess.addChessPiece(new Rook(piece.getPosition(), piece.getFraction(), piece.isAlive()));
+			}
+			
+			if(piece instanceof King) {
+				newChess.addChessPiece(new King(piece.getPosition(), piece.getFraction(), piece.isAlive()));
+			}
+		}
+		
+		return newChess;
 	}
 }

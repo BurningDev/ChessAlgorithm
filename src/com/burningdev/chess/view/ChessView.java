@@ -23,13 +23,13 @@ public class ChessView {
 
 	private JFrame frame;
 	private ChessAlgorithm chessAlgorithm;
-	
+
 	private ChessboardPanel squaresPanel;
-	
+
 	private int mode;
 	private int[] firstPosition;
 	private int[] finishPosition;
-	
+
 	public void open() {
 		frame.setVisible(true);
 	}
@@ -41,70 +41,85 @@ public class ChessView {
 	private void initialize() {
 		this.chessAlgorithm = new ChessAlgorithm();
 		this.mode = 0;
-		
+
 		frame = new JFrame();
 		frame.setBounds(100, 100, 646, 690);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setFocusable(true);
 		frame.setResizable(false);
 		frame.setTitle("Chess - by BurningDev");
-		
+
 		squaresPanel = new ChessboardPanel();
 		squaresPanel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if(chessAlgorithm.getWinner() != null) {
+				if (chessAlgorithm.getWinner() != null) {
 					return;
 				}
-				
-				if(SwingUtilities.isRightMouseButton(e)) {
+
+				if (SwingUtilities.isRightMouseButton(e)) {
 					mode = 0;
 					return;
 				}
-				
-				if(mode == 0 || mode == 1) {
+
+				if (mode == 0 || mode == 1) {
 					firstPosition = calcPosition(e.getY(), e.getX());
 					mode = 2;
-				} else if(mode == 2) {
+				} else if (mode == 2) {
 					finishPosition = calcPosition(e.getY(), e.getX());
-					
-					if(finishPosition[0] == firstPosition[0] && finishPosition[1] == firstPosition[1]) {
+
+					if (finishPosition[0] == firstPosition[0] && finishPosition[1] == firstPosition[1]) {
 						mode = 0;
-						JOptionPane.showMessageDialog(null, "You must not select the same field.", "Warn", JOptionPane.WARNING_MESSAGE);
+						JOptionPane.showMessageDialog(null, "You must not select the same field.", "Warn",
+								JOptionPane.WARNING_MESSAGE);
 						return;
 					}
-					
+
 					mode = 1;
+
+					int errorCode = chessAlgorithm.playerMove(firstPosition[0], firstPosition[1], finishPosition[0], finishPosition[1]);
 					
-					chessAlgorithm.playerMove(firstPosition[0], firstPosition[1], finishPosition[0], finishPosition[1]);
+					if(errorCode == 1) {
+						mode = 0;
+						JOptionPane.showMessageDialog(null, "You cannot move the pieces of the opponent.", "Warn",
+								JOptionPane.WARNING_MESSAGE);
+						return;
+					}
+
+					if (chessAlgorithm.getWinner() == null) {
+						chessAlgorithm.computerMove();
+					}
+					
 					squaresPanel.setPieces(chessAlgorithm.getPieces());
 					squaresPanel.repaint();
-					
-					if(chessAlgorithm.getWinner() == Fraction.PLAYER) {
-						JOptionPane.showMessageDialog(null, "You have defeated your opponent!\n\nGo to File -> Reset", "Victory", JOptionPane.INFORMATION_MESSAGE);
-					} else if(chessAlgorithm.getWinner() == Fraction.COMPUTER) {
-						JOptionPane.showMessageDialog(null, "The opponent has defeated you!\n\nGo to File -> Reset", "Defeat", JOptionPane.ERROR_MESSAGE);
+
+					if (chessAlgorithm.getWinner() == Fraction.PLAYER) {
+						JOptionPane.showMessageDialog(null, "You have defeated your opponent!\n\nGo to File -> Reset",
+								"Victory", JOptionPane.INFORMATION_MESSAGE);
+					} else if (chessAlgorithm.getWinner() == Fraction.COMPUTER) {
+						JOptionPane.showMessageDialog(null, "The opponent has defeated you!\n\nGo to File -> Reset",
+								"Defeat", JOptionPane.ERROR_MESSAGE);
 					}
 				}
 			}
 		});
 		frame.getContentPane().add(squaresPanel);
-		
+
 		squaresPanel.setPieces(this.chessAlgorithm.getPieces());
-		
+
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
-		
+
 		JMenu mnFile = new JMenu("File");
 		menuBar.add(mnFile);
-		
+
 		JMenuItem mntmExit = new JMenuItem("Exit");
 		mntmExit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				System.exit(0);
 			}
 		});
-		
+
 		JMenuItem mntmReset = new JMenuItem("Reset");
 		mntmReset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -112,14 +127,14 @@ public class ChessView {
 			}
 		});
 		mnFile.add(mntmReset);
-		
+
 		JSeparator separator = new JSeparator();
 		mnFile.add(separator);
 		mnFile.add(mntmExit);
-		
+
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
-		
+
 		JMenuItem mnAbout = new JMenuItem("About");
 		mnAbout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -130,7 +145,7 @@ public class ChessView {
 		mnHelp.add(mnAbout);
 		squaresPanel.repaint();
 	}
-	
+
 	/**
 	 * Calculates the position on the board from the coordinates
 	 * 
@@ -140,22 +155,22 @@ public class ChessView {
 	 */
 	private int[] calcPosition(int y, int x) {
 		int[] result = new int[2];
-		
-		for(int tempY = 0; tempY < 8; tempY++) {
-			if(y > (tempY * 80) && y < ((tempY * 80) + 80)) {
+
+		for (int tempY = 0; tempY < 8; tempY++) {
+			if (y > (tempY * 80) && y < ((tempY * 80) + 80)) {
 				result[0] = tempY + 1;
 			}
 		}
-		
-		for(int tempX = 0; tempX < 8; tempX++) {
-			if(x > (tempX * 80) && x < ((tempX * 80) + 80)) {
+
+		for (int tempX = 0; tempX < 8; tempX++) {
+			if (x > (tempX * 80) && x < ((tempX * 80) + 80)) {
 				result[1] = tempX + 1;
 			}
 		}
-		
-		return result; 
+
+		return result;
 	}
-	
+
 	private void reset() {
 		chessAlgorithm.reset();
 		squaresPanel.setPieces(chessAlgorithm.getPieces());

@@ -6,6 +6,7 @@ package com.burningdev.chess.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.burningdev.chess.pieces.Bishop;
 import com.burningdev.chess.pieces.ChessPiece;
 import com.burningdev.chess.pieces.King;
 import com.burningdev.chess.pieces.Knight;
@@ -17,7 +18,7 @@ public class Chess {
 	private List<ChessPiece> pieces;
 
 	private Fraction winner;
-
+	
 	public Chess() {
 		reset();
 	}
@@ -96,6 +97,11 @@ public class Chess {
 		this.pieces.add(new Rook(new Position(0, 0), Fraction.PLAYER));
 		this.pieces.add(new Rook(new Position(7, 0), Fraction.PLAYER));
 		
+		this.pieces.add(new Bishop(new Position(2, 7), Fraction.COMPUTER));
+		this.pieces.add(new Bishop(new Position(5, 7), Fraction.COMPUTER));
+		this.pieces.add(new Bishop(new Position(2, 0), Fraction.PLAYER));
+		this.pieces.add(new Bishop(new Position(5, 0), Fraction.PLAYER));
+		
 		this.pieces.add(new King(new Position(3, 7), Fraction.COMPUTER));
 		this.pieces.add(new King(new Position(4, 0), Fraction.PLAYER));
 
@@ -127,7 +133,7 @@ public class Chess {
 		}
 
 		if (!kingAlive) {			
-			return -50;
+			return -70;
 		}
 
 		for (ChessPiece piece : pieces) {
@@ -259,6 +265,10 @@ public class Chess {
 			
 			if(piece instanceof Rook) {
 				newChess.addChessPiece(new Rook(piece.getPosition(), piece.getFraction(), piece.isAlive()));
+			}
+			
+			if(piece instanceof Bishop) {
+				newChess.addChessPiece(new Bishop(piece.getPosition(), piece.getFraction(), piece.isAlive()));
 			}
 			
 			if(piece instanceof King) {

@@ -34,6 +34,12 @@ public class King extends ChessPiece {
 		addPostionIfValid(position.x + 1, position.y, result, chess);
 		addPostionIfValid(position.x - 1, position.y, result, chess);
 		
+		addPostionIfValid(position.x + 1, position.y + 1, result, chess);
+		addPostionIfValid(position.x + 1, position.y - 1, result, chess);
+		
+		addPostionIfValid(position.x - 1, position.y + 1, result, chess);
+		addPostionIfValid(position.x - 1, position.y - 1, result, chess);
+		
 		return result;
 	}
 	

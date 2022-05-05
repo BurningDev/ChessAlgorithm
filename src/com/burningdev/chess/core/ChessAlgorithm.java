@@ -13,100 +13,98 @@ import com.burningdev.chess.pieces.Position;
 
 public class ChessAlgorithm {
 	private Chess chess;
-	
+
 	public ChessAlgorithm() {
 		this.chess = new Chess();
 	}
-	
-	public void playerMove(int beforeY, int beforeX, int nowY, int nowX) {
+
+	public int playerMove(int beforeY, int beforeX, int nowY, int nowX) {
 		beforeY = beforeY - 1;
 		beforeX = beforeX - 1;
 		nowY = nowY - 1;
 		nowX = nowX - 1;
-		
-		this.chess.move(beforeY, beforeX, nowY, nowX);
-		
-		if(!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.COMPUTER)) {
-			this.chess.setWinner(Fraction.PLAYER);
-			return;
+
+		if (this.chess.getChessPieceOnPosition(beforeX, beforeY) != null
+				&& this.chess.getChessPieceOnPosition(beforeX, beforeY).getFraction() == Fraction.COMPUTER) {
+			return 1;
 		}
-		
-		computerMove();
-		
-		if(!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.PLAYER)) {
+
+		this.chess.move(beforeY, beforeX, nowY, nowX);
+
+		if (!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.COMPUTER)) {
+			this.chess.setWinner(Fraction.PLAYER);
+		}
+
+		return -1;
+	}
+
+	public void computerMove() {
+		if (!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.PLAYER)) {
 			this.chess.setWinner(Fraction.COMPUTER);
 			return;
 		}
-	}
 
-	private void computerMove() {
 		List<Position> computerPositions = this.chess.getAllComputerPositions();
 		List<Movement> movements = new ArrayList<>();
-		
+
 		Node.nodes = 0;
-		
-		for(Position computerPosition : computerPositions) {
-			
-			List<Position> attackablePositions = this.chess.getAttackablePositions(computerPosition.getY(), computerPosition.getX());
-			
-			for(Position attackablePosition : attackablePositions) {
+
+		for (Position computerPosition : computerPositions) {
+
+			List<Position> attackablePositions = this.chess.getAttackablePositions(computerPosition.getY(),
+					computerPosition.getX());
+
+			for (Position attackablePosition : attackablePositions) {
 				// A copy of chess is created
 				Chess newChess = this.chess.clone();
-				
-				newChess.move(computerPosition.getY(), computerPosition.getX(), attackablePosition.getY(), attackablePosition.getX());
-				
+
+				newChess.move(computerPosition.getY(), computerPosition.getX(), attackablePosition.getY(),
+						attackablePosition.getX());
+
 				Node parentNode = new Node(null, newChess, 2, Fraction.PLAYER, true);
 				parentNode.setParentNode(parentNode);
 				parentNode.play();
-				
-				int highestScore = -8;
-				int lowestScore = 8;
-				for(Node node : parentNode.getChildren()) {
-					if(node.getHighestScore() > highestScore) {
-						highestScore = node.getHighestScore();
-					}
-					
-					if(node.getLowestScore() < lowestScore) {
-						lowestScore = node.getLowestScore();
-					}
-				}
-				
+
 				int score = 0;
-				for(Node node : parentNode.getChildren()) {
+				for (Node node : parentNode.getChildren()) {
 					score += node.getScore();
 				}
-				
+
 				movements.add(new Movement(computerPosition, attackablePosition, score));
 			}
 		}
-		
+
 		Collections.sort(movements, new Comparator<Movement>() {
 			@Override
 			public int compare(Movement m1, Movement m2) {
-				if (m1.getScore() < m2.getScore()) {
+				int score1 = m1.getScore();
+				int score2 = m2.getScore();
+
+				if (score1 < score2) {
 					return -1;
 				}
 
-				if (m1.getScore() > m2.getScore()) {
+				if (score1 > score2) {
 					return 1;
 				}
 
 				return 0;
 			}
 		});
-		
+
 		Movement nextMove = movements.get(movements.size() - 1);
-		this.chess.move(nextMove.getFrom().getY(), nextMove.getFrom().getX(), nextMove.getTo().getY(), nextMove.getTo().getX());
+		this.chess.move(nextMove.getFrom().getY(), nextMove.getFrom().getX(), nextMove.getTo().getY(),
+				nextMove.getTo().getX());
 	}
-	
+
 	public List<ChessPiece> getPieces() {
 		return this.chess.getAllPieces(null);
 	}
-	
+
 	public void reset() {
 		this.chess.reset();
 	}
-	
+
 	public Fraction getWinner() {
 		return this.chess.getWinner();
 	}

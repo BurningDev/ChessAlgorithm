@@ -68,13 +68,6 @@ public class ChessView {
 				} else if (mode == 2) {
 					finishPosition = calcPosition(e.getY(), e.getX());
 
-					if (finishPosition[0] == firstPosition[0] && finishPosition[1] == firstPosition[1]) {
-						mode = 0;
-						JOptionPane.showMessageDialog(null, "You must not select the same field.", "Warn",
-								JOptionPane.WARNING_MESSAGE);
-						return;
-					}
-
 					mode = 1;
 
 					int errorCode = chessAlgorithm.playerMove(firstPosition[0], firstPosition[1], finishPosition[0], finishPosition[1]);
@@ -82,6 +75,27 @@ public class ChessView {
 					if(errorCode == 1) {
 						mode = 0;
 						JOptionPane.showMessageDialog(null, "You cannot move the pieces of the opponent.", "Warn",
+								JOptionPane.WARNING_MESSAGE);
+						return;
+					}
+					
+					else if(errorCode == 2) {
+						mode = 0;
+						JOptionPane.showMessageDialog(null, "You must select another field..", "Warn",
+								JOptionPane.WARNING_MESSAGE);
+						return;
+					}
+					
+					else if(errorCode == 3) {
+						mode = 0;
+						JOptionPane.showMessageDialog(null, "Your piece is on the field.", "Warn",
+								JOptionPane.WARNING_MESSAGE);
+						return;
+					}
+					
+					else if(errorCode == 4) {
+						mode = 0;
+						JOptionPane.showMessageDialog(null, "The move is not valid.", "Warn",
 								JOptionPane.WARNING_MESSAGE);
 						return;
 					}

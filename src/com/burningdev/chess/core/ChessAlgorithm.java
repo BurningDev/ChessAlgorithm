@@ -24,9 +24,35 @@ public class ChessAlgorithm {
 		nowY = nowY - 1;
 		nowX = nowX - 1;
 
-		if (this.chess.getChessPieceOnPosition(beforeX, beforeY) != null
-				&& this.chess.getChessPieceOnPosition(beforeX, beforeY).getFraction() == Fraction.COMPUTER) {
+		ChessPiece pieceToMove = this.chess.getChessPieceOnPosition(beforeX, beforeY);
+		
+		if(pieceToMove == null) {
+			return 0;
+		}
+		
+		if (pieceToMove != null
+				&& pieceToMove.getFraction() == Fraction.COMPUTER) {
 			return 1;
+		}
+		
+		if (beforeX == nowX && beforeY == nowY) {
+			return 2;
+		}
+		
+		if (this.chess.getChessPieceOnPosition(nowX, nowY) != null
+				&& this.chess.getChessPieceOnPosition(nowX, nowY).getFraction() == Fraction.PLAYER) {
+			return 3;
+		}
+		
+		boolean moveInvalid = true;
+		for(Position position : pieceToMove.getReachableFields(Fraction.PLAYER, chess)) {
+			if(position.getX() == nowX && position.getY() == nowY) {
+				moveInvalid = false;
+			}
+		}
+		
+		if(moveInvalid) {
+			return 4;
 		}
 
 		this.chess.move(beforeY, beforeX, nowY, nowX);
@@ -95,6 +121,10 @@ public class ChessAlgorithm {
 		Movement nextMove = movements.get(movements.size() - 1);
 		this.chess.move(nextMove.getFrom().getY(), nextMove.getFrom().getX(), nextMove.getTo().getY(),
 				nextMove.getTo().getX());
+		
+		if (!this.chess.pieceExistsAndAlive(Figure.KING, Fraction.PLAYER)) {
+			this.chess.setWinner(Fraction.COMPUTER);
+		}
 	}
 
 	public List<ChessPiece> getPieces() {

@@ -3,7 +3,7 @@
 ## General
 The aim of this project is to develop a powerful chess computer. The algorithm is working and you can play against it.
 
-![grafik](https://user-images.githubusercontent.com/19328035/166105985-593a40c9-efe0-42db-b7c0-e81ee3895f48.png)
+![grafik](https://user-images.githubusercontent.com/19328035/167022779-feb600d8-1d2e-4c78-a15c-39f7b21e7e6f.png)
 
 ## Setup & Instructions
 In order to start the application, a **Java Runtime Environment (JRE) is required**, because this software is programmed in Java. There are two factions in the game. The computer controls the black faction and the player controls the white faction. The player starts the first move. To be able to move a chess piece, it must be left-clicked to select it and then the target field must be clicked. Next, the computer starts its move.
